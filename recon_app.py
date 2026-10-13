@@ -150,6 +150,9 @@ def run_recon(t_bytes, a_bytes, book, env, cutoff):
     t=pd.read_excel(io.BytesIO(t_bytes)); progress.progress(10, "Topaz loaded")
     a=pd.read_excel(io.BytesIO(a_bytes))
     a.columns=[c.lower().strip().replace(' ','_') for c in a.columns]  # normalise all column names
+    # Find creationdate column regardless of exact name
+    cd_col=[c for c in a.columns if 'creation' in c.lower() or 'creationdate' in c.lower()]
+    if cd_col: a=a.rename(columns={cd_col[0]:'creationdate'})
     a['creationdate']=pd.to_datetime(a['creationdate'],format='mixed')
     progress.progress(20, "Allegro loaded")
 
