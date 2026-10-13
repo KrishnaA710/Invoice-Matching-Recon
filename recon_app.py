@@ -148,7 +148,8 @@ def run_recon(t_bytes, a_bytes, book, env, cutoff):
     progress = st.progress(0, text="Reading files...")
 
     t=pd.read_excel(io.BytesIO(t_bytes)); progress.progress(10, "Topaz loaded")
-    a=pd.read_excel(io.BytesIO(a_bytes)); a.columns=[c.lower() for c in a.columns]
+    a=pd.read_excel(io.BytesIO(a_bytes))
+    a.columns=[c.lower().strip().replace(' ','_') for c in a.columns]  # normalise all column names
     a['creationdate']=pd.to_datetime(a['creationdate'],format='mixed')
     progress.progress(20, "Allegro loaded")
 
