@@ -205,8 +205,8 @@ def run_recon(t_bytes, a_bytes, book, env, cutoff):
 
     seg_files={}
     for combo_str in sorted(all_combos):
-        combo=frozenset(combo_str.split(' + '))
-        ids=set(ts[ts['Statuses']==combo]['Trade ID'])
+        combo_=frozenset(combo_str.split(' + '))
+        ids=set(ts[ts['Statuses']==combo_]['Trade ID'])
         df=merged[merged['Trade ID'].isin(ids)].sort_values(['Trade ID','Invoice Item Match Status'])
         sn=combo_str[:31]
         primary_status=sorted(combo)[0]
@@ -284,19 +284,19 @@ def run_recon(t_bytes, a_bytes, book, env, cutoff):
 
     # Other All Data
     all_data_files={}
-    for status,fill_color,hc in [
+    for status_name,fill_color,hc in [
         ('Pending','E3F2FD','1565C0'),('Not Invoiceable','EDE7F6','4A148C'),
         ('Unmatched Cash Flow','FFF3E0','E65100'),('Unmatched Invoice Item','FCE4EC','880E4F')]:
         df2=merged[merged['Invoice Item Match Status']==status].copy().sort_values('Trade ID')
         if len(df2)==0: continue
         c_list=list(df2.columns); fill=fp(fill_color)
-        wb2=openpyxl.Workbook(); ws2=wb2.active; ws2.title=f'{status[:20]}-All'; ws2.sheet_view.showGridLines=False
+        wb2=openpyxl.Workbook(); ws2=wb2.active; ws2.title=f'{status_name[:20]}-All'; ws2.sheet_view.showGridLines=False
         ws2.merge_cells(start_row=1,start_column=1,end_row=1,end_column=len(c_list))
-        c=ws2.cell(1,1,f'{book} {env} — {status} All  |  {len(df2):,} rows')
+        c=ws2.cell(1,1,f'{book} {env} — {status_name} All  |  {len(df2):,} rows')
         c.fill=fp(hc); c.font=Font(name='Arial',bold=True,color='FFFFFF',size=12)
         c.alignment=Alignment(horizontal='center',vertical='center'); c.border=bdr; ws2.row_dimensions[1].height=30
         ws2.merge_cells(start_row=2,start_column=1,end_row=2,end_column=len(c_list))
-        c2=ws2.cell(2,1,f'All {status} rows.'); c2.fill=fp('F5F5F5')
+        c2=ws2.cell(2,1,f'All {status_name} rows.'); c2.fill=fp('F5F5F5')
         c2.font=Font(name='Arial',italic=True,color='424242',size=9); c2.alignment=Alignment(horizontal='left',vertical='center'); c2.border=bdr; ws2.row_dimensions[2].height=20
         for ci,col in enumerate(c_list,1):
             c=ws2.cell(3,ci,col); c.fill=fp(hc); c.font=Font(name='Arial',bold=True,color='FFFFFF',size=9)
@@ -328,10 +328,10 @@ def run_recon(t_bytes, a_bytes, book, env, cutoff):
         if tr not in topaz_nums: not_found.append(tr)
         else:
             m=t[t['Trade ID'].str.contains(str(tr),na=False)]
-            st=frozenset(m['Invoice Item Match Status'].dropna().unique())
-            if st==frozenset({'Not Invoiceable'}): ni_only.append(tr)
+            st_=frozenset(m['Invoice Item Match Status'].dropna().unique())
+            if st_==frozenset({'Not Invoiceable'}): ni_only.append(tr)
             else:
-                mixed.append(tr); combo=' + '.join(sorted(st))
+                mixed.append(tr); combo=' + '.join(sorted(st_))
                 invs=set(ni_all_a[ni_all_a['trade']==tr]['jeragm_custom_inv_num'])
                 combo_r.setdefault(combo,{'trades':0,'inv_set':set()})
                 combo_r[combo]['trades']+=1; combo_r[combo]['inv_set'].update(invs)
@@ -473,8 +473,8 @@ def run_recon(t_bytes, a_bytes, book, env, cutoff):
     files['xl/_rels/workbook.xml.rels']=rel_xml.encode('utf-8')
 
     # Fix alpha + strip NI styles
-    st2=files['xl/styles.xml'].decode('utf-8')
-    files['xl/styles.xml']=re.sub(r'rgb="00([0-9A-Fa-f]{6})"',r'rgb="FF\1"',st2).encode('utf-8')
+    styles2=files['xl/styles.xml'].decode('utf-8')
+    files["xl/styles.xml"]=re.sub(r'rgb="00([0-9A-Fa-f]{6})"',r'rgb="FF\1"',styles2).encode('utf-8')
     sheets_map=dict(re.findall(r'<sheet name="([^"]+)" sheetId="(\d+)"',files['xl/workbook.xml'].decode()))
     ni_sn=sheets_map.get('Needs Investigation')
     if ni_sn:
